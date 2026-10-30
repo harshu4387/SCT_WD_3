@@ -1,0 +1,492 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Quiz Game</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.quiz-container {
+    background: white;
+    width: 100%;
+    max-width: 650px;
+    padding: 30px;
+    border-radius: 18px;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.2);
+}
+
+h1 {
+    text-align: center;
+    color: #6045a5;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #777;
+    margin-bottom: 25px;
+}
+
+.top-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    color: #555;
+    font-weight: bold;
+}
+
+.progress-bar {
+    height: 9px;
+    background: #eee;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    width: 0%;
+    background: #7655d9;
+    transition: 0.3s;
+}
+
+.question {
+    font-size: 21px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.question-type {
+    display: inline-block;
+    background: #eee8ff;
+    color: #6545b5;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-bottom: 15px;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.option {
+    padding: 14px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 16px;
+}
+
+.option:hover {
+    border-color: #7655d9;
+    background: #f6f2ff;
+}
+
+.option.selected {
+    border-color: #7655d9;
+    background: #eee8ff;
+}
+
+.option input {
+    margin-right: 10px;
+}
+
+.fill-input {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+}
+
+.fill-input:focus {
+    border-color: #7655d9;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 30px;
+}
+
+button {
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    background: #7655d9;
+    color: white;
+}
+
+button:hover {
+    background: #5b3bb5;
+}
+
+button:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+}
+
+.result {
+    text-align: center;
+    display: none;
+}
+
+.result h2 {
+    color: #6045a5;
+    margin-bottom: 15px;
+}
+
+.score {
+    font-size: 40px;
+    font-weight: bold;
+    color: #7655d9;
+    margin: 20px;
+}
+
+#restart {
+    margin-top: 20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="quiz-container">
+
+    <div id="quiz">
+
+        <h1>🎯 Quiz Challenge</h1>
+        <p class="subtitle">Test Your Knowledge!</p>
+
+        <div class="top-info">
+            <span id="question-number"></span>
+            <span id="score-display">Score: 0</span>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+
+        <div id="question-area"></div>
+
+        <div class="buttons">
+            <button id="prev-btn" onclick="previousQuestion()">Previous</button>
+            <button id="next-btn" onclick="nextQuestion()">Next</button>
+        </div>
+
+    </div>
+
+    <div class="result" id="result">
+        <h2>🎉 Quiz Completed!</h2>
+        <p>Your Final Score</p>
+        <div class="score" id="final-score"></div>
+        <p id="message"></p>
+        <button id="restart" onclick="restartQuiz()">Play Again</button>
+    </div>
+
+</div>
+
+<script>
+
+const questions = [
+
+    {
+        type: "single",
+        question: "1. Which language is used to create web page structure?",
+        options: ["HTML", "CSS", "Python", "Java"],
+        answer: ["HTML"]
+    },
+
+    {
+        type: "multiple",
+        question: "2. Which of the following are programming languages?",
+        options: ["Java", "Python", "HTML", "C++"],
+        answer: ["Java", "Python", "C++"]
+    },
+
+    {
+        type: "fill",
+        question: "3. Which language is used to style web pages?",
+        answer: ["css"]
+    },
+
+    {
+        type: "single",
+        question: "4. Which language is used for web page interactivity?",
+        options: ["JavaScript", "HTML", "SQL", "CSS"],
+        answer: ["JavaScript"]
+    },
+
+    {
+        type: "multiple",
+        question: "5. Which are front-end technologies?",
+        options: ["HTML", "CSS", "JavaScript", "MySQL"],
+        answer: ["HTML", "CSS", "JavaScript"]
+    },
+
+    {
+        type: "fill",
+        question: "6. What does CSS stand for?",
+        answer: ["cascading style sheets"]
+    },
+
+    {
+        type: "single",
+        question: "7. Which database is used to store data?",
+        options: ["MySQL", "HTML", "CSS", "Bootstrap"],
+        answer: ["MySQL"]
+    },
+
+    {
+        type: "single",
+        question: "8. What does JS stand for?",
+        options: ["JavaScript", "JavaStyle", "JustScript", "Joomla"],
+        answer: ["JavaScript"]
+    }
+
+];
+
+let currentQuestion = 0;
+let userAnswers = Array(questions.length).fill(null);
+let score = 0;
+
+const questionArea = document.getElementById("question-area");
+
+function displayQuestion() {
+
+    const q = questions[currentQuestion];
+
+    document.getElementById("question-number").innerText =
+        `Question ${currentQuestion + 1} / ${questions.length}`;
+
+    document.getElementById("score-display").innerText =
+        `Score: ${score}`;
+
+    document.getElementById("progress").style.width =
+        ((currentQuestion + 1) / questions.length * 100) + "%";
+
+    let html = "";
+
+    let typeName = q.type === "single"
+        ? "Single Choice"
+        : q.type === "multiple"
+        ? "Multiple Select"
+        : "Fill in the Blanks";
+
+    html += `<span class="question-type">${typeName}</span>`;
+    html += `<div class="question">${q.question}</div>`;
+
+    if (q.type === "single" || q.type === "multiple") {
+
+        html += `<div class="options">`;
+
+        q.options.forEach(option => {
+
+            let selected = userAnswers[currentQuestion] || [];
+
+            let checked = selected.includes(option);
+
+            html += `
+                <label class="option ${checked ? "selected" : ""}">
+                    <input
+                        type="${q.type === "single" ? "radio" : "checkbox"}"
+                        name="answer"
+                        value="${option}"
+                        ${checked ? "checked" : ""}
+                        onchange="saveAnswer()">
+                    ${option}
+                </label>
+            `;
+
+        });
+
+        html += `</div>`;
+
+    } else {
+
+        let answer = userAnswers[currentQuestion] || "";
+
+        html += `
+            <input
+                class="fill-input"
+                type="text"
+                id="fill-answer"
+                placeholder="Type your answer here..."
+                value="${answer}"
+                oninput="saveAnswer()">
+        `;
+
+    }
+
+    questionArea.innerHTML = html;
+
+    document.getElementById("prev-btn").disabled =
+        currentQuestion === 0;
+
+    document.getElementById("next-btn").innerText =
+        currentQuestion === questions.length - 1
+        ? "Submit Quiz"
+        : "Next";
+
+}
+
+function saveAnswer() {
+
+    const q = questions[currentQuestion];
+
+    if (q.type === "single") {
+
+        const selected = document.querySelector(
+            'input[name="answer"]:checked'
+        );
+
+        userAnswers[currentQuestion] =
+            selected ? [selected.value] : [];
+
+    } else if (q.type === "multiple") {
+
+        const selected = document.querySelectorAll(
+            'input[name="answer"]:checked'
+        );
+
+        userAnswers[currentQuestion] =
+            Array.from(selected).map(input => input.value);
+
+    } else {
+
+        userAnswers[currentQuestion] =
+            document.getElementById("fill-answer").value;
+
+    }
+
+    document.querySelectorAll(".option").forEach(option => {
+        const input = option.querySelector("input");
+        option.classList.toggle("selected", input.checked);
+    });
+
+}
+
+function nextQuestion() {
+
+    saveAnswer();
+
+    if (currentQuestion < questions.length - 1) {
+
+        currentQuestion++;
+        displayQuestion();
+
+    } else {
+
+        calculateScore();
+
+    }
+
+}
+
+function previousQuestion() {
+
+    saveAnswer();
+
+    if (currentQuestion > 0) {
+        currentQuestion--;
+        displayQuestion();
+    }
+
+}
+
+function calculateScore() {
+
+    score = 0;
+
+    questions.forEach((q, index) => {
+
+        let userAnswer = userAnswers[index];
+
+        if (q.type === "fill") {
+
+            const correct = q.answer.map(a => a.toLowerCase().trim());
+
+            if (correct.includes((userAnswer || "").toLowerCase().trim())) {
+                score++;
+            }
+
+        } else {
+
+            const correct = [...q.answer].sort();
+            const user = [...(userAnswer || [])].sort();
+
+            if (
+                correct.length === user.length &&
+                correct.every((value, i) => value === user[i])
+            ) {
+                score++;
+            }
+
+        }
+
+    });
+
+    document.getElementById("quiz").style.display = "none";
+    document.getElementById("result").style.display = "block";
+
+    document.getElementById("final-score").innerText =
+        `${score} / ${questions.length}`;
+
+    let percentage = (score / questions.length) * 100;
+
+    let message = percentage >= 80
+        ? "Excellent! Great Job! 🏆"
+        : percentage >= 50
+        ? "Good Work! Keep Practicing! 👍"
+        : "Keep Learning and Try Again! 💪";
+
+    document.getElementById("message").innerText = message;
+
+}
+
+function restartQuiz() {
+
+    currentQuestion = 0;
+    userAnswers = Array(questions.length).fill(null);
+    score = 0;
+
+    document.getElementById("quiz").style.display = "block";
+    document.getElementById("result").style.display = "none";
+
+    displayQuestion();
+
+}
+
+displayQuestion();
+
+</script>
+
+</body>
+</html>
